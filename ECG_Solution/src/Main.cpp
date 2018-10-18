@@ -10,6 +10,9 @@
 #include "GL/glew.h"
 #include "GLFW/glfw3.h"
 
+#include "Shader.h"
+#include "Camera.h"
+
 
 
 /* --------------------------------------------- */
@@ -17,14 +20,17 @@
 /* --------------------------------------------- */
 
 static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
+static void scrollCallback(GLFWwindow* window, double xoffset, double yoffset);
+static void mouseKeyCallback(GLFWwindow* window, int button, int action, int mods);
 static void APIENTRY DebugCallbackDefault(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const GLvoid* userParam);
 static std::string FormatDebugOutput(GLenum source, GLenum type, GLuint id, GLenum severity, const char* msg);
 
 /* --------------------------------------------- */
 // Global variables
 /* --------------------------------------------- */
-
-
+float _zoom=6;
+bool _dragging = false;
+bool _strafing = false;
 
 /* --------------------------------------------- */
 // Main
@@ -39,7 +45,10 @@ int main(int argc, char** argv)
 	INIReader reader("assets/settings.ini");
 	
 	int window_width = reader.GetInteger("window", "width", 800);
-	int window_Height = reader.GetInteger("window", "height", 800);
+	int window_height = reader.GetInteger("window", "height", 800);
+	float fov = reader.GetReal("camera", "fov", 60.0);
+	float nearZ = reader.GetReal("camera", "near", 0.1);
+	float farZ = reader.GetReal("camera", "far", 100.0);
 	int refreshRate = reader.GetInteger("window", "refresh_rate", 120);
 	std::string windowTitle = reader.Get("window", "title", "ECG");
 
@@ -64,7 +73,7 @@ int main(int argc, char** argv)
 	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 #endif
 
-	GLFWwindow* window = glfwCreateWindow(window_width, window_Height, windowTitle.c_str(), nullptr, nullptr);
+	GLFWwindow* window = glfwCreateWindow(window_width, window_height, windowTitle.c_str(), nullptr, nullptr);
 
 	if (!window) {
 		glfwTerminate();
@@ -98,6 +107,8 @@ int main(int argc, char** argv)
 
 	//Set input callbacks
 	glfwSetKeyCallback(window,keyCallback);
+	glfwSetScrollCallback(window, scrollCallback);
+	glfwSetMouseButtonCallback(window, mouseKeyCallback);
 
 	//Set GL defaults (color etc.)
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -106,13 +117,24 @@ int main(int argc, char** argv)
 	// Initialize scene and render loop
 	/* --------------------------------------------- */
 	{
+		Shader testShader("solidColorShader.vert", "solidColorShader.frag");
+		testShader.use();
+		testShader.setUniform("materialColor", glm::vec3(1.0f, 0.0f, 0.0f));
+		glm::mat4 modelMatrix1 = glm::mat4(1.0f);
+		Camera camera(fov, float(window_width) / float(window_height), nearZ, farZ);
+		double mouseX, mouseY;
 		while (!glfwWindowShouldClose(window)) {
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 			//Poll Input Events
 			glfwPollEvents();
+			glfwGetCursorPos(window, &mouseX, &mouseY);
+			//update camera
+			camera.update(int(mouseX),int(mouseY),_zoom,_dragging);
+			testShader.setUniform("viewProjectionMatrix", camera.getViewProjectionMatrix());
 
 			//draw Geometries
+			testShader.setUniform("modelMatrix", modelMatrix1);
 			drawTeapot();
 
 			//Swap Buffers
@@ -141,6 +163,27 @@ int main(int argc, char** argv)
 static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 	if (key == GLFW_KEY_ESCAPE) {
 		glfwSetWindowShouldClose(window, GL_TRUE);
+	}
+}
+
+static void scrollCallback(GLFWwindow* window, double xoffset, double yoffset)
+{
+	_zoom -= 0.4*float(yoffset);
+}
+
+static void mouseKeyCallback(GLFWwindow* window, int button, int action, int mods)
+{
+	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+		_dragging = true;
+	}
+	else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
+		_dragging = false;
+	}
+	else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
+		_strafing = true;
+	}
+	else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE) {
+		_strafing = false;
 	}
 }
 
