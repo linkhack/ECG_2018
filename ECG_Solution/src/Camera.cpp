@@ -10,6 +10,7 @@ Camera::Camera(float fov, float aspect, float near, float far)
 	yaw = 0.0f;
 	radius = 6.0f;
 	position = vec3(0.0f, 0.0f, 6.0f);
+	strafe = vec3(0.0f, 0.0f, 0.0f);
 	vec3 up = vec3(0.0f, 1.0f, 0.0f);
 	vec3 right = vec3(1.0f, 0.0f, 0.0f);
 	projectionMatrix = perspective(radians(fov), aspect, near, far);
@@ -27,31 +28,29 @@ mat4 Camera::getViewProjectionMatrix()
 	return projectionMatrix*viewMatrix;
 }
 
-void Camera::update(int x, int y, float zoom, bool dragging)
+void Camera::update(int x, int y, float zoom, bool dragging, bool strafing)
 {
 	mat4 rotation = mat4(1.0f);
 	radius = zoom;
-	if (radius < 0.2) radius = 0.2;
+	if (radius < 0.2) radius = 0.2f;
 	int deltaX = x - lastX;
 	int deltaY = y - lastY;
 	if (dragging)
 	{
-		float deltaAnglePitch = 2 * pi<float>()*float(deltaY) / 600.0;
-		float deltaAngleYaw = pi<float>()*float(deltaX) / 600.0;
+		float deltaAnglePitch = 2 * pi<float>()*float(deltaY) / 600.0f;
+		float deltaAngleYaw = pi<float>()*float(deltaX) / 600.0f;
 		pitch += deltaAnglePitch;
 		yaw -= deltaAngleYaw;
-		if (pitch < -pi<float>() / 2.0 + 0.01)
+		if (pitch < -pi<float>() / 2.0f + 0.01f)
 		{
-			pitch = -pi<float>() / 2.0 + 0.01;
+			pitch = -pi<float>() / 2.0f + 0.01f;
 		}
-		if (pitch > pi<float>() / 2.0 - 0.01)
+		if (pitch > pi<float>() / 2.0f - 0.01f)
 		{
-			pitch = pi<float>() / 2.0 - 0.01;
+			pitch = pi<float>() / 2.0f - 0.01f;
 		}
 	}
 	position = radius * vec3(cosf(pitch)*sin(yaw), sinf(pitch), cosf(pitch)*cosf(yaw));
-
-	std::cout << position.x << " " << position.y << " " << position.z << std::endl;
 	/*
 	vec3 lookAt = normalize(position);
 	vec3 up = vec3(0.0, 1.0, 0.0);
@@ -64,11 +63,17 @@ void Camera::update(int x, int y, float zoom, bool dragging)
 	vec3 right = normalize(cross(front, up));
 	vec3 zAxis = cross(right, front);
 
-	//rotation = mat4(vec4(front, 0.0f), vec4(right, 0.0f), vec4(zAxis, 0.0f), vec4(0, 0, 0, 1));
+	if (strafing)
+	{
+		strafe += -0.01f * float(deltaX) * right + 0.01f * float(deltaY) * zAxis;
+	}
+
+	position += strafe;
+
 	rotation = mat4(vec4(right, 0.0f), vec4(zAxis, 0.0f), vec4(-front, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f));
 	
 	viewMatrix = transpose(rotation)*translate(mat4(1.0f),-position);
-	//viewMatrix = rotation*translate(mat4(1.0f),-position);
+
 	lastX = x;
 	lastY = y;
 }

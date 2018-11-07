@@ -46,9 +46,9 @@ int main(int argc, char** argv)
 	
 	int window_width = reader.GetInteger("window", "width", 800);
 	int window_height = reader.GetInteger("window", "height", 800);
-	float fov = reader.GetReal("camera", "fov", 60.0);
-	float nearZ = reader.GetReal("camera", "near", 0.1);
-	float farZ = reader.GetReal("camera", "far", 100.0);
+	float fov = reader.GetReal("camera", "fov", 60.0f);
+	float nearZ = reader.GetReal("camera", "near", 0.1f);
+	float farZ = reader.GetReal("camera", "far", 100.0f);
 	int refreshRate = reader.GetInteger("window", "refresh_rate", 120);
 	std::string windowTitle = reader.Get("window", "title", "ECG");
 
@@ -113,6 +113,8 @@ int main(int argc, char** argv)
 	//Set GL defaults (color etc.)
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
+	// Depth Test
+	glEnable(GL_DEPTH_TEST);
 	/* --------------------------------------------- */
 	// Initialize scene and render loop
 	/* --------------------------------------------- */
@@ -120,7 +122,8 @@ int main(int argc, char** argv)
 		Shader testShader("solidColorShader.vert", "solidColorShader.frag");
 		testShader.use();
 		testShader.setUniform("materialColor", glm::vec3(1.0f, 0.0f, 0.0f));
-		glm::mat4 modelMatrix1 = glm::mat4(1.0f);
+		glm::mat4 modelMatrix1 = glm::translate(glm::mat4(1.0f),glm::vec3(1.5,1,0))*glm::scale(glm::mat4(1.0f),glm::vec3(1,2,1));
+		glm::mat4 modelMatrix2 = glm::translate(glm::mat4(1.0f),glm::vec3(-1.5,-1,0))*glm::rotate(glm::mat4(1.0f), glm::radians(45.0f), glm::vec3(0, 0, 1));
 		Camera camera(fov, float(window_width) / float(window_height), nearZ, farZ);
 		double mouseX, mouseY;
 		while (!glfwWindowShouldClose(window)) {
@@ -130,13 +133,17 @@ int main(int argc, char** argv)
 			glfwPollEvents();
 			glfwGetCursorPos(window, &mouseX, &mouseY);
 			//update camera
-			camera.update(int(mouseX),int(mouseY),_zoom,_dragging);
+			camera.update(int(mouseX),int(mouseY),_zoom,_dragging,_strafing);
 			testShader.setUniform("viewProjectionMatrix", camera.getViewProjectionMatrix());
 
 			//draw Geometries
 			testShader.setUniform("modelMatrix", modelMatrix1);
+			testShader.setUniform("materialColor", glm::vec3(1.0f, 0.0f, 0.0f));
 			drawTeapot();
 
+			testShader.setUniform("modelMatrix", modelMatrix2);
+			testShader.setUniform("materialColor", glm::vec3(0.0f, 0.0f, 1.0f));
+			drawTeapot();
 			//Swap Buffers
 			glfwSwapBuffers(window);
 		}
@@ -161,28 +168,33 @@ int main(int argc, char** argv)
 
 
 static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-	if (key == GLFW_KEY_ESCAPE) {
+	if (key == GLFW_KEY_ESCAPE) 
+	{
 		glfwSetWindowShouldClose(window, GL_TRUE);
 	}
 }
 
 static void scrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
-	_zoom -= 0.4*float(yoffset);
+	_zoom -= 0.4f*float(yoffset);
 }
 
 static void mouseKeyCallback(GLFWwindow* window, int button, int action, int mods)
 {
-	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) 
+	{
 		_dragging = true;
 	}
-	else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
+	else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) 
+	{
 		_dragging = false;
 	}
-	else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
+	else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) 
+	{
 		_strafing = true;
 	}
-	else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE) {
+	else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE) 
+	{
 		_strafing = false;
 	}
 }
