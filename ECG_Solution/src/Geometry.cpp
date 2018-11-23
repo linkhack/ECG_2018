@@ -35,7 +35,7 @@ Geometry::~Geometry()
 {
 }
 
-void Geometry::setColor(glm::vec4 color)
+void Geometry::setColor(glm::vec3 color)
 {
 	this->color = color;
 }

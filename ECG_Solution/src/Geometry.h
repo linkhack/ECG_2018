@@ -30,13 +30,13 @@ private:
 
 	//Shader and Material stuff like color
 	std::shared_ptr<Shader> shader;
-	glm::vec4 color;
+	glm::vec3 color;
 
 public:
 	Geometry(glm::mat4 modelMatrix, GeometryData& geometryData, std::shared_ptr<Shader> shader);
 	~Geometry();
 
-	void setColor(glm::vec4 color);
+	void setColor(glm::vec3 color);
 
 	void draw(glm::mat4 matrix = glm::mat4(1.0f));
 
