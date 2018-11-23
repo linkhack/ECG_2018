@@ -26,11 +26,18 @@ Geometry::Geometry(glm::mat4 modelMatrix, GeometryData& geometryData, std::share
 	glBindVertexArray(0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
+	//set color
+	color = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 }
 
 
 Geometry::~Geometry()
 {
+}
+
+void Geometry::setColor(glm::vec4 color)
+{
+	this->color = color;
 }
 
 
@@ -41,6 +48,7 @@ void Geometry::draw(glm::mat4 matrix)
 	//set Model Uniforms
 	shader->use();
 	shader->setUniform("modelMatrix", totalMatrix);
+	shader->setUniform("materialColor", color);
 	//Bind Buffers
 	glBindVertexArray(vao);
 
