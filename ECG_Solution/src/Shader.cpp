@@ -185,7 +185,8 @@ Shader::~Shader()
 	GLsizei numberOfShaders;
 	glGetAttachedShaders(handle, 2, &numberOfShaders, attachedShaders);
 	glDeleteProgram(handle);
-	for (int i = 0; i < numberOfShaders; ++i) {
+	for (int i = 0; i < numberOfShaders; ++i) 
+	{
 		glDeleteShader(attachedShaders[i]);
 	}
 	std::cout << "Shader Deleted" << std::endl;

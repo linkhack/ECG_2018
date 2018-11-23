@@ -51,12 +51,7 @@ void Camera::update(int x, int y, float zoom, bool dragging, bool strafing)
 		}
 	}
 	position = radius * vec3(cosf(pitch)*sin(yaw), sinf(pitch), cosf(pitch)*cosf(yaw));
-	/*
-	vec3 lookAt = normalize(position);
-	vec3 up = vec3(0.0, 1.0, 0.0);
-	vec3 right = normalize(cross(lookAt, up));
-	vec3 left = cross(lookAt,right);
-	*/
+
 	vec3 up = vec3(0.0f, 1.0f, 0.0f);
 	vec3 lookingDirection =-position;
 	vec3 front = normalize(lookingDirection);
