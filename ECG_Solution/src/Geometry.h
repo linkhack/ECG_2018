@@ -1,9 +1,13 @@
 #pragma once
 #include <vector>
 #include <memory>
+
 #include <glm/glm.hpp>
 #include <Gl/glew.h>
+#include <glm/gtc/constants.hpp>
+
 #include "Shader.h"
+
 
 using namespace std;
 
@@ -15,7 +19,7 @@ struct GeometryData {
 class Geometry
 {
 private:
-
+	bool isEmpty;
 	//Buffers
 	GLuint vao;
 
@@ -42,5 +46,8 @@ public:
 
 	//Construction helper
 	static GeometryData createCubeGeometry(float width, float height, float depth);
+	static GeometryData createSphereGeometry(float radius, unsigned int longitudeSegments, unsigned int latitudeSegments);
+	static GeometryData createCylinderGeometry(float radius, float height, unsigned int segmnets);
+	static GeometryData createTorusGeometry(float bigRadius, float smallRadius, unsigned int tubeSections, unsigned int circleSections);
 };
 

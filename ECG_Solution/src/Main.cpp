@@ -12,6 +12,7 @@
 
 #include "Shader.h"
 #include "Camera.h"
+#include "Geometry.h"
 
 
 
@@ -31,6 +32,8 @@ static std::string FormatDebugOutput(GLenum source, GLenum type, GLuint id, GLen
 float _zoom=6;
 bool _dragging = false;
 bool _strafing = false;
+bool _wireframe = false;
+bool _backFaceCulling = true;
 
 /* --------------------------------------------- */
 // Main
@@ -115,15 +118,22 @@ int main(int argc, char** argv)
 
 	// Depth Test
 	glEnable(GL_DEPTH_TEST);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	glEnable(GL_CULL_FACE);
 	/* --------------------------------------------- */
 	// Initialize scene and render loop
 	/* --------------------------------------------- */
 	{
-		Shader testShader("solidColorShader.vert", "solidColorShader.frag");
-		testShader.use();
-		testShader.setUniform("materialColor", glm::vec3(1.0f, 0.0f, 0.0f));
+		std::shared_ptr<Shader> testShader= std::make_shared<Shader>("solidColorShader.vert", "solidColorShader.frag");
+		testShader->use();
+		testShader->setUniform("materialColor", glm::vec3(1.0f, 0.0f, 0.0f));
 		glm::mat4 modelMatrix1 = glm::translate(glm::mat4(1.0f),glm::vec3(1.5,1,0))*glm::scale(glm::mat4(1.0f),glm::vec3(1,2,1));
 		glm::mat4 modelMatrix2 = glm::translate(glm::mat4(1.0f),glm::vec3(-1.5,-1,0))*glm::rotate(glm::mat4(1.0f), glm::radians(45.0f), glm::vec3(0, 0, 1));
+		
+		Geometry box(glm::mat4(1.0f), Geometry::createCubeGeometry(5, 5, 5), testShader);
+		box.setColor(glm::vec3(0.0f, 1.0f, 0.0f));
+		Geometry sphere(glm::mat4(1.0f), Geometry::createSphereGeometry(1.5f, 50, 50), testShader);
+		sphere.setColor(glm::vec3(0.4f, 0.05f, 0.05f));
 		Camera camera(fov, float(window_width) / float(window_height), nearZ, farZ);
 		double mouseX, mouseY;
 		while (!glfwWindowShouldClose(window)) {
@@ -134,16 +144,11 @@ int main(int argc, char** argv)
 			glfwGetCursorPos(window, &mouseX, &mouseY);
 			//update camera
 			camera.update(int(mouseX),int(mouseY),_zoom,_dragging,_strafing);
-			testShader.setUniform("viewProjectionMatrix", camera.getViewProjectionMatrix());
+			testShader->setUniform("viewProjectionMatrix", camera.getViewProjectionMatrix());
 
 			//draw Geometries
-			testShader.setUniform("modelMatrix", modelMatrix1);
-			testShader.setUniform("materialColor", glm::vec3(1.0f, 0.0f, 0.0f));
-			drawTeapot();
-
-			testShader.setUniform("modelMatrix", modelMatrix2);
-			testShader.setUniform("materialColor", glm::vec3(0.0f, 0.0f, 1.0f));
-			drawTeapot();
+			//box.draw();
+			sphere.draw();
 			//Swap Buffers
 			glfwSwapBuffers(window);
 		}
@@ -168,9 +173,36 @@ int main(int argc, char** argv)
 
 
 static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+
+	if (action != GLFW_RELEASE) return;
+
 	if (key == GLFW_KEY_ESCAPE) 
 	{
 		glfwSetWindowShouldClose(window, GL_TRUE);
+	}
+	if(key == GLFW_KEY_F1)
+	{ 
+		_wireframe = !_wireframe;
+		if (_wireframe)
+		{
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		}
+		else
+		{
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		}
+	}
+	if (key == GLFW_KEY_F2)
+	{
+		_backFaceCulling = !_backFaceCulling;
+		if (_backFaceCulling)
+		{
+			glEnable(GL_CULL_FACE);
+		}
+		else
+		{
+			glEnable(GL_CULL_FACE);
+		}
 	}
 }
 
