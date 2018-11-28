@@ -72,37 +72,37 @@ GeometryData Geometry::createCubeGeometry(float width, float height, float depth
 	//Vertices position
 	data.positions = {
 		//front
-		glm::vec3(-width / 2.0f, height / 2.0f, depth / 2.0f),
+		glm::vec3(-width / 2.0f, height / 2.0f, depth / 2.0f), //0
 		glm::vec3(-width / 2.0f, -height / 2.0f, depth / 2.0f),
 		glm::vec3(width / 2.0f, -height / 2.0f, depth / 2.0f),
 		glm::vec3(width / 2.0f, height / 2.0f, depth / 2.0f),
 
 		//back
-		glm::vec3(width / 2.0f, height / 2.0f, -depth / 2.0f),
+		glm::vec3(width / 2.0f, height / 2.0f, -depth / 2.0f), //4
 		glm::vec3(width / 2.0f, -height / 2.0f, -depth / 2.0f),
 		glm::vec3(-width / 2.0f, -height / 2.0f, -depth / 2.0f),
 		glm::vec3(-width / 2.0f, height / 2.0f, -depth / 2.0f),
 
 		//top
-		glm::vec3(-width / 2.0f, height / 2.0f, depth / 2.0f),
+		glm::vec3(-width / 2.0f, height / 2.0f, depth / 2.0f), //8
 		glm::vec3(width / 2.0f, height / 2.0f, depth / 2.0f),
 		glm::vec3(width / 2.0f, height / 2.0f, -depth / 2.0f),
 		glm::vec3(-width / 2.0f, height / 2.0f, -depth / 2.0f),
 
 		//bottom
-		glm::vec3(width / 2.0f, -height / 2.0f, -depth / 2.0f),
+		glm::vec3(width / 2.0f, -height / 2.0f, -depth / 2.0f), //12
 		glm::vec3(-width / 2.0f, -height / 2.0f, -depth / 2.0f),
 		glm::vec3(-width / 2.0f, -height / 2.0f, depth / 2.0f),
 		glm::vec3(width / 2.0f, -height / 2.0f, depth / 2.0f),
 
 		//left
-		glm::vec3(-width / 2.0f, height / 2.0f, -depth / 2.0f),
+		glm::vec3(-width / 2.0f, height / 2.0f, -depth / 2.0f), //16
 		glm::vec3(-width / 2.0f, -height / 2.0f, -depth / 2.0f),
 		glm::vec3(-width / 2.0f, -height / 2.0f, depth / 2.0f),
 		glm::vec3(-width / 2.0f, height / 2.0f, depth / 2.0f),
 
 		//right
-		glm::vec3(width / 2.0f, -height / 2.0f, depth / 2.0f),
+		glm::vec3(width / 2.0f, -height / 2.0f, depth / 2.0f), //20
 		glm::vec3(width / 2.0f, height / 2.0f, depth / 2.0f),
 		glm::vec3(width / 2.0f, height / 2.0f, -depth / 2.0f),
 		glm::vec3(width / 2.0f, -height / 2.0f, -depth / 2.0f)
@@ -121,13 +121,17 @@ GeometryData Geometry::createCubeGeometry(float width, float height, float depth
 		8, 9, 10,
 		10, 11, 8,
 
+		//bottom
+		12,14,13,
+		14,12,15,
+
 		//left
-		12,13,14,
-		14,15,12,
+		16,17,18,
+		18,19,16,
 
 		//right
-		16,17,18,
-		18,19,16
+		20,22,21,
+		22,20,23
 	};
 
 	return data;
@@ -143,12 +147,12 @@ GeometryData Geometry::createSphereGeometry(float radius, unsigned int longitude
 	for (unsigned int i = 0; i < longitudeSegments; ++i)
 	{
 		data.indices.push_back(0);
-		data.indices.push_back(i + 2);
 		data.indices.push_back(i == longitudeSegments-1? 2 : i+3);
+		data.indices.push_back(i + 2);
 
 		data.indices.push_back(1);
-		data.indices.push_back(i == longitudeSegments - 1 ? (latitudeSegments - 2)*longitudeSegments + 3 : (latitudeSegments - 2)*longitudeSegments + i + 3);
 		data.indices.push_back((latitudeSegments - 2)*longitudeSegments + 2 + i);
+		data.indices.push_back(i == longitudeSegments - 1 ? (latitudeSegments - 2)*longitudeSegments + 2 : (latitudeSegments - 2)*longitudeSegments + i + 3);
 	}
 
 	//construct rings and vertices
@@ -163,24 +167,97 @@ GeometryData Geometry::createSphereGeometry(float radius, unsigned int longitude
 			));
 			if (latIndex == 1) continue;
 			data.indices.push_back((latIndex - 1)*longitudeSegments + longIndex + 2);
-			data.indices.push_back(longIndex==longitudeSegments-1? (latIndex - 2)*longitudeSegments + 2 :(latIndex - 2)*longitudeSegments + longIndex + 3);
 			data.indices.push_back((latIndex - 2)*longitudeSegments + longIndex + 2);
+			data.indices.push_back(longIndex==longitudeSegments-1? (latIndex - 2)*longitudeSegments + 2 :(latIndex - 2)*longitudeSegments + longIndex + 3);
+
 
 			data.indices.push_back((latIndex - 1)*longitudeSegments + longIndex + 2);
-			data.indices.push_back(longIndex == longitudeSegments - 1 ? (latIndex - 1)*longitudeSegments + 2 : (latIndex - 1)*longitudeSegments + longIndex + 3);
 			data.indices.push_back(longIndex == longitudeSegments - 1 ? (latIndex - 2)*longitudeSegments + 2 : (latIndex - 2)*longitudeSegments + longIndex + 3);
+			data.indices.push_back(longIndex == longitudeSegments - 1 ? (latIndex - 1)*longitudeSegments + 2 : (latIndex - 1)*longitudeSegments + longIndex + 3);
 		}
 	}
 
 	return data;
 }
 
-GeometryData Geometry::createCylinderGeometry(float radius, float height, unsigned int segmnets)
+GeometryData Geometry::createCylinderGeometry(float radius, float height, unsigned int segments)
 {
 	GeometryData data;
 
 	//bottome
-	glm::vec3(0, -height / 2.0f, 0.0f);
+	data.positions.push_back(glm::vec3(0, -height / 2.0f, 0.0f));
 
-	return GeometryData();
+	//top
+	data.positions.push_back(glm::vec3(0, height / 2.0f, 0.0f));
+
+
+	for (int i = 0; i < segments; i++)
+	{
+		float angle = 2 * i * glm::pi<float>() / float(segments);
+		//two vertices because of normals (one one normal for bottom/top, and one normal to side face
+		//Vertices are ordered counterclockwise!!
+		data.positions.push_back(glm::vec3(radius*glm::cos(angle), -height / 2.0f, radius*glm::sin(angle))); // 2 + 4i //bottom face
+		data.positions.push_back(glm::vec3(radius*glm::cos(angle), -height / 2.0f, radius*glm::sin(angle))); // 3 + 4i //side face bottom
+		data.positions.push_back(glm::vec3(radius*glm::cos(angle), height / 2.0f, radius*glm::sin(angle)));  // 4 + 4i //side face top
+		data.positions.push_back(glm::vec3(radius*glm::cos(angle), height / 2.0f, radius* glm::sin(angle)));  // 5 + 4i //top face
+
+		//bottom faces
+		data.indices.push_back(0);
+		data.indices.push_back(2 + 4 * i);
+		data.indices.push_back(i == segments - 1 ? 2 : 2 + 4 * (i + 1));
+		
+		//side faces
+		data.indices.push_back(3 + 4 * i);
+		data.indices.push_back(i == segments - 1 ? 4 : 4 + 4 * (i + 1));
+		data.indices.push_back(i == segments - 1 ? 3 : 3 + 4 * (i + 1));
+
+
+		data.indices.push_back(3 + 4 * i);
+		data.indices.push_back(4 + 4 * i);
+		data.indices.push_back(i == segments - 1 ? 4 : 4 + 4 * (i + 1));
+
+		//top face
+		data.indices.push_back(1);
+		data.indices.push_back(i == segments - 1 ? 5 : 5 + 4 * (i + 1));
+		data.indices.push_back(5 + 4 * i);
+	}
+	return data;
+}
+
+GeometryData Geometry::createTorusGeometry(float bigRadius, float smallRadius, unsigned int tubeSections, unsigned int circleSections)
+{
+	GeometryData data;
+	for (int tubeIndex = 0; tubeIndex < tubeSections; ++tubeIndex)
+	{
+		float tubeAngle = 2 * tubeIndex*glm::pi<float>() / float(tubeSections);
+		for (int circleIndex = 0; circleIndex < circleSections; ++circleIndex)
+		{
+			float circleAngle = 2 * circleIndex * glm::pi<float>() / float(circleSections);
+			data.positions.push_back(glm::vec3( (bigRadius + smallRadius * glm::cos(circleAngle))*glm::cos(tubeAngle),
+												smallRadius * glm::sin(circleAngle),
+												(bigRadius + smallRadius * glm::cos(circleAngle))*glm::sin(tubeAngle)));
+			data.indices.push_back(circleIndex + tubeIndex * circleSections);
+			data.indices.push_back(circleIndex == circleSections - 1 ? tubeIndex * circleSections : circleIndex + tubeIndex * circleSections + 1);
+			if (tubeIndex == tubeSections - 1) 
+			{
+				data.indices.push_back(circleIndex == circleSections - 1 ? 0 : circleIndex+1);
+			}
+			else 
+			{
+				data.indices.push_back(circleIndex == circleSections - 1 ? (tubeIndex+1) * circleSections : circleIndex + (tubeIndex+1) * circleSections + 1);
+			}
+			
+			data.indices.push_back(circleIndex + tubeIndex * circleSections);
+			if (tubeIndex == tubeSections - 1)
+			{
+				data.indices.push_back(circleIndex == circleSections - 1 ? 0 : circleIndex + 1);
+			}
+			else
+			{
+				data.indices.push_back(circleIndex == circleSections - 1 ? (tubeIndex + 1) * circleSections : circleIndex + (tubeIndex + 1) * circleSections + 1);
+			}
+			data.indices.push_back(tubeIndex == tubeSections-1? circleIndex :  circleIndex + (tubeIndex+1) * circleSections);
+		}
+	}
+	return data;
 }

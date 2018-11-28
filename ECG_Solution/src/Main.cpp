@@ -120,6 +120,7 @@ int main(int argc, char** argv)
 	glEnable(GL_DEPTH_TEST);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
 	/* --------------------------------------------- */
 	// Initialize scene and render loop
 	/* --------------------------------------------- */
@@ -130,10 +131,14 @@ int main(int argc, char** argv)
 		glm::mat4 modelMatrix1 = glm::translate(glm::mat4(1.0f),glm::vec3(1.5,1,0))*glm::scale(glm::mat4(1.0f),glm::vec3(1,2,1));
 		glm::mat4 modelMatrix2 = glm::translate(glm::mat4(1.0f),glm::vec3(-1.5,-1,0))*glm::rotate(glm::mat4(1.0f), glm::radians(45.0f), glm::vec3(0, 0, 1));
 		
-		Geometry box(glm::mat4(1.0f), Geometry::createCubeGeometry(5, 5, 5), testShader);
+		Geometry box(glm::mat4(1.0f), Geometry::createCubeGeometry(2, 2, 2), testShader);
 		box.setColor(glm::vec3(0.0f, 1.0f, 0.0f));
-		Geometry sphere(glm::mat4(1.0f), Geometry::createSphereGeometry(1.5f, 50, 50), testShader);
+		Geometry sphere(glm::mat4(1.0f), Geometry::createSphereGeometry(1.5f, 16, 8), testShader);
 		sphere.setColor(glm::vec3(0.4f, 0.05f, 0.05f));
+		Geometry cylinder(glm::mat4(1.0f), Geometry::createCylinderGeometry(0.6f, 2.0f, 16), testShader);
+		cylinder.setColor(glm::vec3(0.0f, 0.0f, 1.0f));
+		Geometry torus(glm::mat4(1.0f), Geometry::createTorusGeometry(4.0f, 1.0f, 32, 8), testShader);
+		torus.setColor(glm::vec3(0.5f, 0.0f, 0.5f));
 		Camera camera(fov, float(window_width) / float(window_height), nearZ, farZ);
 		double mouseX, mouseY;
 		while (!glfwWindowShouldClose(window)) {
@@ -147,8 +152,9 @@ int main(int argc, char** argv)
 			testShader->setUniform("viewProjectionMatrix", camera.getViewProjectionMatrix());
 
 			//draw Geometries
-			//box.draw();
-			sphere.draw();
+			torus.draw();
+			//sphere.draw();
+			//cylinder.draw();
 			//Swap Buffers
 			glfwSwapBuffers(window);
 		}
@@ -201,7 +207,7 @@ static void keyCallback(GLFWwindow* window, int key, int scancode, int action, i
 		}
 		else
 		{
-			glEnable(GL_CULL_FACE);
+			glDisable(GL_CULL_FACE);
 		}
 	}
 }
