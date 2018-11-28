@@ -128,17 +128,19 @@ int main(int argc, char** argv)
 		std::shared_ptr<Shader> testShader= std::make_shared<Shader>("solidColorShader.vert", "solidColorShader.frag");
 		testShader->use();
 		testShader->setUniform("materialColor", glm::vec3(1.0f, 0.0f, 0.0f));
-		glm::mat4 modelMatrix1 = glm::translate(glm::mat4(1.0f),glm::vec3(1.5,1,0))*glm::scale(glm::mat4(1.0f),glm::vec3(1,2,1));
-		glm::mat4 modelMatrix2 = glm::translate(glm::mat4(1.0f),glm::vec3(-1.5,-1,0))*glm::rotate(glm::mat4(1.0f), glm::radians(45.0f), glm::vec3(0, 0, 1));
+		glm::mat4 boxModelMatrix = glm::rotate(glm::mat4(1.0f),glm::radians(45.0f),glm::vec3(0.0f,1.0f,0.0f));
+		glm::mat4 sphereModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.7f, 1.0f));
+		glm::mat4 cylinderModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-2.0f, 0.0f, 0.0f));
+		glm::mat4 torusModelMatrix = glm::scale(glm::mat4(1.0f),glm::vec3(1.0f,0.6f,1.0f));
 		
-		Geometry box(glm::mat4(1.0f), Geometry::createCubeGeometry(2, 2, 2), testShader);
+		Geometry box(boxModelMatrix, Geometry::createCubeGeometry(1.2f, 2.0f, 1.2f), testShader);
 		box.setColor(glm::vec3(0.0f, 1.0f, 0.0f));
-		Geometry sphere(glm::mat4(1.0f), Geometry::createSphereGeometry(1.5f, 16, 8), testShader);
-		sphere.setColor(glm::vec3(0.4f, 0.05f, 0.05f));
-		Geometry cylinder(glm::mat4(1.0f), Geometry::createCylinderGeometry(0.6f, 2.0f, 16), testShader);
+		Geometry sphere(sphereModelMatrix, Geometry::createSphereGeometry(0.6f, 16, 8), testShader);
+		sphere.setColor(glm::vec3(1.0f, 0.0f, 0.0f));
+		Geometry cylinder(cylinderModelMatrix, Geometry::createCylinderGeometry(0.6f, 2.0f, 16), testShader);
 		cylinder.setColor(glm::vec3(0.0f, 0.0f, 1.0f));
-		Geometry torus(glm::mat4(1.0f), Geometry::createTorusGeometry(4.0f, 1.0f, 32, 8), testShader);
-		torus.setColor(glm::vec3(0.5f, 0.0f, 0.5f));
+		Geometry torus(torusModelMatrix, Geometry::createTorusGeometry(4.5f, 0.5f, 32, 8), testShader);
+		torus.setColor(glm::vec3(1.0f, 0.0f, 1.0f));
 		Camera camera(fov, float(window_width) / float(window_height), nearZ, farZ);
 		double mouseX, mouseY;
 		while (!glfwWindowShouldClose(window)) {
@@ -153,8 +155,9 @@ int main(int argc, char** argv)
 
 			//draw Geometries
 			torus.draw();
-			//sphere.draw();
-			//cylinder.draw();
+			sphere.draw();
+			cylinder.draw();
+			box.draw();
 			//Swap Buffers
 			glfwSwapBuffers(window);
 		}

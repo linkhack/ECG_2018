@@ -234,10 +234,11 @@ GeometryData Geometry::createTorusGeometry(float bigRadius, float smallRadius, u
 		{
 			float circleAngle = 2 * circleIndex * glm::pi<float>() / float(circleSections);
 			data.positions.push_back(glm::vec3( (bigRadius + smallRadius * glm::cos(circleAngle))*glm::cos(tubeAngle),
-												smallRadius * glm::sin(circleAngle),
-												(bigRadius + smallRadius * glm::cos(circleAngle))*glm::sin(tubeAngle)));
-			data.indices.push_back(circleIndex + tubeIndex * circleSections);
+												(bigRadius + smallRadius * glm::cos(circleAngle))*glm::sin(tubeAngle),
+												 smallRadius * glm::sin(circleAngle)));
+
 			data.indices.push_back(circleIndex == circleSections - 1 ? tubeIndex * circleSections : circleIndex + tubeIndex * circleSections + 1);
+			data.indices.push_back(circleIndex + tubeIndex * circleSections);
 			if (tubeIndex == tubeSections - 1) 
 			{
 				data.indices.push_back(circleIndex == circleSections - 1 ? 0 : circleIndex+1);
@@ -247,7 +248,6 @@ GeometryData Geometry::createTorusGeometry(float bigRadius, float smallRadius, u
 				data.indices.push_back(circleIndex == circleSections - 1 ? (tubeIndex+1) * circleSections : circleIndex + (tubeIndex+1) * circleSections + 1);
 			}
 			
-			data.indices.push_back(circleIndex + tubeIndex * circleSections);
 			if (tubeIndex == tubeSections - 1)
 			{
 				data.indices.push_back(circleIndex == circleSections - 1 ? 0 : circleIndex + 1);
@@ -256,6 +256,7 @@ GeometryData Geometry::createTorusGeometry(float bigRadius, float smallRadius, u
 			{
 				data.indices.push_back(circleIndex == circleSections - 1 ? (tubeIndex + 1) * circleSections : circleIndex + (tubeIndex + 1) * circleSections + 1);
 			}
+			data.indices.push_back(circleIndex + tubeIndex * circleSections);
 			data.indices.push_back(tubeIndex == tubeSections-1? circleIndex :  circleIndex + (tubeIndex+1) * circleSections);
 		}
 	}
