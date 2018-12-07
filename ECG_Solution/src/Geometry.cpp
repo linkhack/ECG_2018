@@ -17,6 +17,13 @@ Geometry::Geometry(glm::mat4 modelMatrix, GeometryData& geometryData, std::share
 	//Bind vertex positions to location 0
 	glEnableVertexAttribArray(0);
 
+	//create normals array buffer
+	glGenBuffers(1, &vboNormals);
+	glBindBuffer(GL_ARRAY_BUFFER, vboNormals);
+	glBufferData(GL_ARRAY_BUFFER, geometryData.normals.size() * sizeof(glm::vec3), geometryData.normals.data(), GL_STATIC_DRAW);
+
+	//Bind vertex normals to location 1
+	glEnableVertexAttribArray(1);
 
 	//create Index Array
 	glGenBuffers(1, &vboIndices);
@@ -108,6 +115,44 @@ GeometryData Geometry::createCubeGeometry(float width, float height, float depth
 		glm::vec3(width / 2.0f, -height / 2.0f, -depth / 2.0f)
 	};
 
+	data.normals = {
+		//front
+		glm::vec3(0.0f,0.0f,1.0f),
+		glm::vec3(0.0f,0.0f,1.0f),
+		glm::vec3(0.0f,0.0f,1.0f),
+		glm::vec3(0.0f,0.0f,1.0f),
+
+		//back
+		glm::vec3(0.0f,0.0f,-1.0f),
+		glm::vec3(0.0f,0.0f,-1.0f),
+		glm::vec3(0.0f,0.0f,-1.0f),
+		glm::vec3(0.0f,0.0f,-1.0f),
+
+		//top
+		glm::vec3(0.0f,1.0f,0.0f),
+		glm::vec3(0.0f,1.0f,0.0f),
+		glm::vec3(0.0f,1.0f,0.0f),
+		glm::vec3(0.0f,1.0f,0.0f),
+
+		//bottom
+		glm::vec3(0.0f,-1.0f,0.0f),
+		glm::vec3(0.0f,-1.0f,0.0f),
+		glm::vec3(0.0f,-1.0f,0.0f),
+		glm::vec3(0.0f,-1.0f,0.0f),
+
+		//left
+		glm::vec3(-1.0f,0.0f,0.0f),
+		glm::vec3(-1.0f,0.0f,0.0f),
+		glm::vec3(-1.0f,0.0f,0.0f),
+		glm::vec3(-1.0f,0.0f,0.0f),
+
+		//right
+		glm::vec3(1.0f,0.0f,0.0f),
+		glm::vec3(1.0f,0.0f,0.0f),
+		glm::vec3(1.0f,0.0f,0.0f),
+		glm::vec3(1.0f,0.0f,0.0f)
+	};
+
 	data.indices = {
 		//Front
 		0,1,2,
@@ -165,6 +210,12 @@ GeometryData Geometry::createSphereGeometry(float radius, unsigned int longitude
 				radius * glm::cos(verticalAngle),
 				radius * glm::sin(verticalAngle) * glm::sin(horizontalAngle)
 			));
+			//normal is in direcction of vertex but with unit length
+			data.normals.push_back(glm::vec3(
+				glm::sin(verticalAngle) * glm::cos(horizontalAngle),
+				glm::cos(verticalAngle),
+				glm::sin(verticalAngle) * glm::sin(horizontalAngle)
+			));
 			if (latIndex == 1) continue;
 			data.indices.push_back((latIndex - 1)*longitudeSegments + longIndex + 2);
 			data.indices.push_back((latIndex - 2)*longitudeSegments + longIndex + 2);
@@ -186,9 +237,10 @@ GeometryData Geometry::createCylinderGeometry(float radius, float height, unsign
 
 	//bottome
 	data.positions.push_back(glm::vec3(0, -height / 2.0f, 0.0f));
-
+	data.normals.push_back(glm::vec3(0.0f, -1.0f, 0.0f));
 	//top
 	data.positions.push_back(glm::vec3(0, height / 2.0f, 0.0f));
+	data.normals.push_back(glm::vec3(0, 1.0f, 0.0f));
 
 
 	for (int i = 0; i < segments; i++)
@@ -197,10 +249,13 @@ GeometryData Geometry::createCylinderGeometry(float radius, float height, unsign
 		//two vertices because of normals (one one normal for bottom/top, and one normal to side face
 		//Vertices are ordered counterclockwise!!
 		data.positions.push_back(glm::vec3(radius*glm::cos(angle), -height / 2.0f, radius*glm::sin(angle))); // 2 + 4i //bottom face
+		data.normals.push_back(glm::vec3(0.0f, -1.0f, 0.0f));
 		data.positions.push_back(glm::vec3(radius*glm::cos(angle), -height / 2.0f, radius*glm::sin(angle))); // 3 + 4i //side face bottom
+		data.normals.push_back(glm::vec3(glm::cos(angle), 0.0f, glm::sin(angle)));
 		data.positions.push_back(glm::vec3(radius*glm::cos(angle), height / 2.0f, radius*glm::sin(angle)));  // 4 + 4i //side face top
+		data.normals.push_back(glm::vec3(glm::cos(angle), 0.0f, glm::sin(angle)));
 		data.positions.push_back(glm::vec3(radius*glm::cos(angle), height / 2.0f, radius* glm::sin(angle)));  // 5 + 4i //top face
-
+		data.normals.push_back(glm::vec3(0.0f, 1.0f, 0.0f));
 		//bottom faces
 		data.indices.push_back(0);
 		data.indices.push_back(2 + 4 * i);
@@ -236,7 +291,9 @@ GeometryData Geometry::createTorusGeometry(float bigRadius, float smallRadius, u
 			data.positions.push_back(glm::vec3( (bigRadius + smallRadius * glm::cos(circleAngle))*glm::cos(tubeAngle),
 												(bigRadius + smallRadius * glm::cos(circleAngle))*glm::sin(tubeAngle),
 												 smallRadius * glm::sin(circleAngle)));
-
+			glm::vec3 tangentTubeAngle = glm::vec3(-glm::sin(tubeAngle), glm::cos(tubeAngle), 0.0f);
+			glm::vec3 tangentCircleAngle = glm::vec3(-smallRadius * glm::cos(tubeAngle)*glm::sin(circleAngle), -smallRadius * glm::sin(tubeAngle)*glm::sin(circleAngle), smallRadius * glm::cos(circleAngle));
+			data.normals.push_back(glm::normalize(glm::cross(tangentTubeAngle, tangentCircleAngle)));
 			data.indices.push_back(circleIndex == circleSections - 1 ? tubeIndex * circleSections : circleIndex + tubeIndex * circleSections + 1);
 			data.indices.push_back(circleIndex + tubeIndex * circleSections);
 			if (tubeIndex == tubeSections - 1) 

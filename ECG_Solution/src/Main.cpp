@@ -126,6 +126,7 @@ int main(int argc, char** argv)
 	/* --------------------------------------------- */
 	{
 		std::shared_ptr<Shader> testShader= std::make_shared<Shader>("solidColorShader.vert", "solidColorShader.frag");
+		std::shared_ptr<Shader> gouraudShader = std::make_shared<Shader>("Gouraud.vert", "Gouraud.frag");
 		testShader->use();
 		testShader->setUniform("materialColor", glm::vec3(1.0f, 0.0f, 0.0f));
 		glm::mat4 boxModelMatrix = glm::rotate(glm::mat4(1.0f),glm::radians(45.0f),glm::vec3(0.0f,1.0f,0.0f));
@@ -133,7 +134,7 @@ int main(int argc, char** argv)
 		glm::mat4 cylinderModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-2.0f, 0.0f, 0.0f));
 		glm::mat4 torusModelMatrix = glm::scale(glm::mat4(1.0f),glm::vec3(1.0f,0.6f,1.0f));
 		
-		Geometry box(boxModelMatrix, Geometry::createCubeGeometry(1.2f, 2.0f, 1.2f), testShader);
+		Geometry box(boxModelMatrix, Geometry::createCubeGeometry(1.2f, 2.0f, 1.2f), gouraudShader);
 		box.setColor(glm::vec3(0.0f, 1.0f, 0.0f));
 		Geometry sphere(sphereModelMatrix, Geometry::createSphereGeometry(0.6f, 16, 8), testShader);
 		sphere.setColor(glm::vec3(1.0f, 0.0f, 0.0f));
@@ -151,6 +152,9 @@ int main(int argc, char** argv)
 			glfwGetCursorPos(window, &mouseX, &mouseY);
 			//update camera
 			camera.update(int(mouseX),int(mouseY),_zoom,_dragging,_strafing);
+			gouraudShader->use();
+			gouraudShader->setUniform("viewProjectionMatrix", camera.getViewProjectionMatrix());
+			testShader->use();
 			testShader->setUniform("viewProjectionMatrix", camera.getViewProjectionMatrix());
 
 			//draw Geometries

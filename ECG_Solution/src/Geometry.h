@@ -12,7 +12,10 @@
 using namespace std;
 
 struct GeometryData {
+	//Vertex data
 	vector<glm::vec3> positions;
+	vector<glm::vec3> normals;
+	//Indices
 	vector<unsigned int> indices;
 };
 
@@ -24,6 +27,7 @@ private:
 	GLuint vao;
 
 	GLuint vboPositions;
+	GLuint vboNormals;
 	GLuint vboIndices;
 
 	//nrOfVertices
