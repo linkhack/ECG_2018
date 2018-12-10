@@ -26,8 +26,14 @@ public:
 
 	void setUniform(std::string uniform, const glm::vec3& value);
 	void setUnifrom(GLint location, const glm::vec3& value);
+	void setUniform(std::string uniform, const int value);
+	void setUniform(GLint location, const int value);
+	void setUniform(std::string uniform, const float value);
+	void setUniform(GLint location, const float value);
 	void setUniform(std::string uniform, const glm::mat4& mat);
 	void setUniform(GLint location, const glm::mat4& mat);
+	void setUniform(std::string uniform, const glm::mat3& mat);
+	void setUniform(GLint location, const glm::mat3& mat);
 	void use();
 	void unuse();
 	~Shader();

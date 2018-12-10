@@ -28,6 +28,11 @@ mat4 Camera::getViewProjectionMatrix()
 	return projectionMatrix*viewMatrix;
 }
 
+glm::vec3 Camera::getPosition()
+{
+	return position;
+}
+
 void Camera::update(int x, int y, float zoom, bool dragging, bool strafing)
 {
 	mat4 rotation = mat4(1.0f);

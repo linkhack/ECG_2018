@@ -13,6 +13,7 @@
 #include "Shader.h"
 #include "Camera.h"
 #include "Geometry.h"
+#include "LightManager.h"
 
 
 
@@ -25,11 +26,12 @@ static void scrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 static void mouseKeyCallback(GLFWwindow* window, int button, int action, int mods);
 static void APIENTRY DebugCallbackDefault(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const GLvoid* userParam);
 static std::string FormatDebugOutput(GLenum source, GLenum type, GLuint id, GLenum severity, const char* msg);
+static void perFrameUniforms(std::vector<std::shared_ptr<Shader>>& shaders, Camera& camera);
 
 /* --------------------------------------------- */
 // Global variables
 /* --------------------------------------------- */
-float _zoom=6;
+float _zoom = 6;
 bool _dragging = false;
 bool _strafing = false;
 bool _wireframe = false;
@@ -46,12 +48,12 @@ int main(int argc, char** argv)
 	/* --------------------------------------------- */
 
 	INIReader reader("assets/settings.ini");
-	
+
 	int window_width = reader.GetInteger("window", "width", 800);
 	int window_height = reader.GetInteger("window", "height", 800);
-	float fov = reader.GetReal("camera", "fov", 60.0f);
-	float nearZ = reader.GetReal("camera", "near", 0.1f);
-	float farZ = reader.GetReal("camera", "far", 100.0f);
+	float fov = float(reader.GetReal("camera", "fov", 60.0f));
+	float nearZ = float(reader.GetReal("camera", "near", 0.1f));
+	float farZ = float(reader.GetReal("camera", "far", 100.0f));
 	int refreshRate = reader.GetInteger("window", "refresh_rate", 120);
 	std::string windowTitle = reader.Get("window", "title", "ECG");
 
@@ -63,7 +65,7 @@ int main(int argc, char** argv)
 	if (!glfwInit()) {
 		EXIT_WITH_ERROR("Failed to init glfw");
 	}
-	
+
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4); // Request OpenGL version 4.3
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // Request core profile													  
@@ -95,7 +97,7 @@ int main(int argc, char** argv)
 
 #if _DEBUG
 	//Register Callback function
-	glDebugMessageCallback(DebugCallbackDefault, NULL); 
+	glDebugMessageCallback(DebugCallbackDefault, NULL);
 	//Synchronuous Callback - imidiatly after error
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 #endif
@@ -109,7 +111,7 @@ int main(int argc, char** argv)
 	}
 
 	//Set input callbacks
-	glfwSetKeyCallback(window,keyCallback);
+	glfwSetKeyCallback(window, keyCallback);
 	glfwSetScrollCallback(window, scrollCallback);
 	glfwSetMouseButtonCallback(window, mouseKeyCallback);
 
@@ -125,23 +127,36 @@ int main(int argc, char** argv)
 	// Initialize scene and render loop
 	/* --------------------------------------------- */
 	{
-		std::shared_ptr<Shader> testShader= std::make_shared<Shader>("solidColorShader.vert", "solidColorShader.frag");
+		//Shaders
+		std::vector<std::shared_ptr<Shader>> shaders;
+		std::shared_ptr<Shader> testShader = std::make_shared<Shader>("solidColorShader.vert", "solidColorShader.frag");
+		shaders.emplace_back(testShader);
 		std::shared_ptr<Shader> gouraudShader = std::make_shared<Shader>("Gouraud.vert", "Gouraud.frag");
-		testShader->use();
-		testShader->setUniform("materialColor", glm::vec3(1.0f, 0.0f, 0.0f));
-		glm::mat4 boxModelMatrix = glm::rotate(glm::mat4(1.0f),glm::radians(45.0f),glm::vec3(0.0f,1.0f,0.0f));
-		glm::mat4 sphereModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.7f, 1.0f));
-		glm::mat4 cylinderModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-2.0f, 0.0f, 0.0f));
-		glm::mat4 torusModelMatrix = glm::scale(glm::mat4(1.0f),glm::vec3(1.0f,0.6f,1.0f));
-		
-		Geometry box(boxModelMatrix, Geometry::createCubeGeometry(1.2f, 2.0f, 1.2f), gouraudShader);
-		box.setColor(glm::vec3(0.0f, 1.0f, 0.0f));
-		Geometry sphere(sphereModelMatrix, Geometry::createSphereGeometry(0.6f, 16, 8), testShader);
-		sphere.setColor(glm::vec3(1.0f, 0.0f, 0.0f));
-		Geometry cylinder(cylinderModelMatrix, Geometry::createCylinderGeometry(0.6f, 2.0f, 16), testShader);
-		cylinder.setColor(glm::vec3(0.0f, 0.0f, 1.0f));
-		Geometry torus(torusModelMatrix, Geometry::createTorusGeometry(4.5f, 0.5f, 32, 8), testShader);
-		torus.setColor(glm::vec3(1.0f, 0.0f, 1.0f));
+		shaders.emplace_back(gouraudShader);
+		std::shared_ptr<Shader> phongShader = std::make_shared<Shader>("Phong.vert", "Phong.frag");
+		shaders.emplace_back(phongShader);
+
+		//Materials
+		std::shared_ptr<Material> gouraudSphere = std::make_shared<Material>(gouraudShader, glm::vec3(0.1f), glm::vec3(0.9f), glm::vec3(0.3f), 10.0f);
+		std::shared_ptr<Material> phongSphere = std::make_shared<Material>(phongShader, glm::vec3(0.1f), glm::vec3(0.9f), glm::vec3(0.3f), 10.0f);
+		//Geometries
+		glm::mat4 topLeftModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-1.2f, 1.0f, 0.0f));
+		Geometry topLeftSphere(topLeftModelMatrix, Geometry::createSphereGeometry(1.0, 32, 16), gouraudSphere);
+		topLeftSphere.setColor(glm::vec3(1.0f, 0.0f, 0.0f));
+		glm::mat4 topRightModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(1.2f, 1.0f, 0.0f));
+		Geometry topRightSphere(topRightModelMatrix, Geometry::createSphereGeometry(1.0, 32, 16), phongSphere);
+		topRightSphere.setColor(glm::vec3(1.0f, 0.0f, 0.0f));
+
+		//Lights
+		LightManager lightManager;
+		lightManager.createPointLight(glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.0f), glm::vec3(0.1f, 0.4f, 1.0f));
+		//lightManager.createPointLight(glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.5f,0.5f,0.5f), glm::vec3(0.1f, 0.4f, 1.0f));
+		//lightManager.createPointLight(glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.5f,0.5f,0.5f), glm::vec3(0.1f, 0.4f, 1.0f));
+		lightManager.createDirectionalLight(glm::vec3(0.8f), glm::vec3(0.0f, -1.0f, -1.0f));
+		//lightManager.createDirectionalLight(glm::vec3(0.8f,0.8f,0.8f), glm::vec3(0.0f, 0.0f, 1.0f));
+		//lightManager.createDirectionalLight(0.25f*glm::vec3(0.8f), glm::vec3(0.0f, -5.0f, -1.0f));
+
+		//Camera
 		Camera camera(fov, float(window_width) / float(window_height), nearZ, farZ);
 		double mouseX, mouseY;
 		while (!glfwWindowShouldClose(window)) {
@@ -151,17 +166,17 @@ int main(int argc, char** argv)
 			glfwPollEvents();
 			glfwGetCursorPos(window, &mouseX, &mouseY);
 			//update camera
-			camera.update(int(mouseX),int(mouseY),_zoom,_dragging,_strafing);
-			gouraudShader->use();
-			gouraudShader->setUniform("viewProjectionMatrix", camera.getViewProjectionMatrix());
-			testShader->use();
-			testShader->setUniform("viewProjectionMatrix", camera.getViewProjectionMatrix());
+			camera.update(int(mouseX), int(mouseY), _zoom, _dragging, _strafing);
+
+			//Update Lights
+			lightManager.setUniforms(shaders);
+
+			//Update Frame uniforms
+			perFrameUniforms(shaders, camera);
 
 			//draw Geometries
-			torus.draw();
-			sphere.draw();
-			cylinder.draw();
-			box.draw();
+			topLeftSphere.draw();
+			topRightSphere.draw();
 			//Swap Buffers
 			glfwSwapBuffers(window);
 		}
@@ -189,12 +204,12 @@ static void keyCallback(GLFWwindow* window, int key, int scancode, int action, i
 
 	if (action != GLFW_RELEASE) return;
 
-	if (key == GLFW_KEY_ESCAPE) 
+	if (key == GLFW_KEY_ESCAPE)
 	{
 		glfwSetWindowShouldClose(window, GL_TRUE);
 	}
-	if(key == GLFW_KEY_F1)
-	{ 
+	if (key == GLFW_KEY_F1)
+	{
 		_wireframe = !_wireframe;
 		if (_wireframe)
 		{
@@ -226,19 +241,19 @@ static void scrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 
 static void mouseKeyCallback(GLFWwindow* window, int button, int action, int mods)
 {
-	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) 
+	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
 	{
 		_dragging = true;
 	}
-	else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) 
+	else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
 	{
 		_dragging = false;
 	}
-	else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) 
+	else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
 	{
 		_strafing = true;
 	}
-	else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE) 
+	else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE)
 	{
 		_strafing = false;
 	}
@@ -344,4 +359,13 @@ static std::string FormatDebugOutput(GLenum source, GLenum type, GLuint id, GLen
 	stringStream << ", ID = " << id << "]";
 
 	return stringStream.str();
+}
+
+void perFrameUniforms(std::vector<std::shared_ptr<Shader>>& shaders, Camera & camera)
+{
+	for (std::shared_ptr<Shader> shader : shaders) {
+		shader->use();
+		shader->setUniform("viewProjectionMatrix", camera.getViewProjectionMatrix());
+		shader->setUniform("cameraPosition", camera.getPosition());
+	}
 }

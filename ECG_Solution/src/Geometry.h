@@ -7,6 +7,7 @@
 #include <glm/gtc/constants.hpp>
 
 #include "Shader.h"
+#include "Material.h"
 
 
 using namespace std;
@@ -37,11 +38,13 @@ private:
 	glm::mat4 modelMatrix;
 
 	//Shader and Material stuff like color
-	std::shared_ptr<Shader> shader;
+	std::shared_ptr<Material> material;
 	glm::vec3 color;
 
 public:
+	Geometry(glm::mat4 modelMatrix, GeometryData& geometryData, std::shared_ptr<Material> material);
 	Geometry(glm::mat4 modelMatrix, GeometryData& geometryData, std::shared_ptr<Shader> shader);
+
 	~Geometry();
 
 	void setColor(glm::vec3 color);

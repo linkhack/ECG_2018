@@ -1,14 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <ClInclude Include="src\SpotLight.h" />
+    <ClInclude Include="src\LightManager.h" />
+    <ClInclude Include="src\DirectionalLight.h" />
+    <ClInclude Include="src\Material.h" />
     <ClInclude Include="src\Camera.h" />
     <ClInclude Include="src\Geometry.h">
       <DeploymentContent>false</DeploymentContent>
     </ClInclude>
+    <ClInclude Include="src\Light.h" />
+    <ClInclude Include="src\PointLight.h" />
     <ClInclude Include="src\Shader.h" />
     <ClInclude Include="src\INIReader.h" />
+    <ClCompile Include="src\SpotLight.cpp" />
+    <ClCompile Include="src\LightManager.cpp" />
+    <ClCompile Include="src\DirectionalLight.cpp" />
+    <ClCompile Include="src\Material.cpp" />
     <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\Geometry.cpp" />
+    <ClCompile Include="src\Light.cpp" />
+    <ClCompile Include="src\PointLight.cpp" />
     <ClCompile Include="src\Shader.cpp" />
     <ClCompile Include="src\Main.cpp" />
     <ClInclude Include="src\Utils.h" />

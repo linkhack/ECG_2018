@@ -156,6 +156,28 @@ void Shader::setUnifrom(GLint location, const glm::vec3& value)
 	glUniform3f(location, value.x, value.y, value.z);
 }
 
+void Shader::setUniform(std::string uniform, const int value)
+{
+	GLint location = getUniformLocation(uniform);
+	setUniform(location, value);
+}
+
+void Shader::setUniform(GLint location, const int value)
+{
+	glUniform1i(location, value);
+}
+
+void Shader::setUniform(std::string uniform, const float value)
+{
+	GLint location = getUniformLocation(uniform);
+	setUniform(location, value);
+}
+
+void Shader::setUniform(GLint location, const float value)
+{
+	glUniform1f(location, value);
+}
+
 void Shader::setUniform(std::string uniform, const glm::mat4 & mat)
 {
 	GLint location = getUniformLocation(uniform);
@@ -164,8 +186,18 @@ void Shader::setUniform(std::string uniform, const glm::mat4 & mat)
 
 void Shader::setUniform(GLint location, const glm::mat4 & mat)
 {
-	
 	glUniformMatrix4fv(location, 1, GL_FALSE, &mat[0][0]);
+}
+
+void Shader::setUniform(std::string uniform, const glm::mat3 & mat)
+{
+	GLint location = getUniformLocation(uniform);
+	setUniform(location, mat);
+}
+
+void Shader::setUniform(GLint location, const glm::mat3 & mat)
+{
+	glUniformMatrix3fv(location, 1, GL_FALSE, &mat[0][0]);
 }
 
 void Shader::use()
