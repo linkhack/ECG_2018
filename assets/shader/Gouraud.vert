@@ -1,8 +1,8 @@
 #version 430 core
 
-#define _DIRECTIONAL_LIGHTS_COUNT 3
-#define _POINT_LIGHTS_COUNT 3
-#define _SPOT_LIGHT_COUNT 3
+#define _DIRECTIONAL_LIGHTS_COUNT 64
+#define _POINT_LIGHTS_COUNT 64
+#define _SPOT_LIGHT_COUNT 64
 
 struct PointLight {
 	vec3 color;
@@ -21,8 +21,8 @@ struct SpotLight {
 	vec3 direction;
 	float innerOpeningAngle;
 	float outerOpeningAngle;
-	glm::vec3 attenuation;
-}
+	vec3 attenuation;
+};
 
 struct Material {
 	vec3 ambient;
@@ -49,7 +49,7 @@ uniform Material materialCoefficients;
 //Lights
 uniform PointLight pointLights[_POINT_LIGHTS_COUNT];
 uniform DirectionalLight directionalLights[_DIRECTIONAL_LIGHTS_COUNT];
-uniform SpotLight spotLights[_SPOT_LIGHT_COUNT]
+uniform SpotLight spotLights[_SPOT_LIGHT_COUNT];
 uniform int nrPointLight;
 uniform int nrDirLight;
 uniform int nrSpotLight;
@@ -84,9 +84,21 @@ vec3 addDirectionalLight(vec3 normal, vec3 viewingDir,  DirectionalLight light){
 	return color;
 }
 
+vec3 addSpotLight(vec3 normal, vec3 viewingDir, vec3 lightDir, SpotLight light){
+	vec3 color = vec3(0.0f);
+	float outerCos = cos(light.outerOpeningAngle);
+	float innerCos = cos(light.innerOpeningAngle);
+	float directionCos = dot(-lightDir,light.direction);
+	float interpolationT = 1.0f-smoothstep(innerCos,outerCos,directionCos);
+	color += interpolationT * materialCoefficients.diffuse * materialColor * light.color * diffuse(normal,lightDir);
+	color += interpolationT * materialCoefficients.specular * light.color * specular(normal,lightDir,viewingDir);
+
+	return color;
+}
+
 void main() {
 	colorVertex = vec4(materialCoefficients.ambient*materialColor,1);
-	
+	//colorVertex = vec4(0.0f,0.0f,0.0f,1.0f);
 	vec4 worldPosition = modelMatrix * vec4(position,1.0f);
 	
 	vec3 v = normalize(cameraPosition - worldPosition.xyz);
@@ -105,6 +117,14 @@ void main() {
 	for(int i = 0; i< nrDirLight; ++i){
 		DirectionalLight light = directionalLights[i];
 		colorVertex += vec4(addDirectionalLight(normalWorld,v,light),0.0f);
+	}
+	for(int i = 0; i < nrSpotLight; ++i){
+		SpotLight light = spotLights[i];
+		vec3 l = light.position - worldPosition.xyz;
+		float d = length(l);
+		l = normalize(l);
+		float attenuation = 1/(light.attenuation.x*d*d+light.attenuation.y*d+light.attenuation.z);
+		colorVertex+=vec4(addSpotLight(normalWorld, v, l, light)*attenuation,0.0f);
 	}
 	//colorVertex = colorVertex/colorVertex.w;
 	gl_Position = viewProjectionMatrix * worldPosition;

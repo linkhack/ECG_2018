@@ -18,6 +18,6 @@ void SpotLight::setUniform(std::shared_ptr<Shader>& shader, int index)
 }
 
 SpotLight::SpotLight(glm::vec3 color, glm::vec3 position, glm::vec3 direction, float innerOpeningAngle, float outerOpeningAngle, glm::vec3 attenuation):
-	properties(color,position,glm::normalize(direction),innerOpeningAngle,outerOpeningAngle,attenuation)
+	properties(color,position,glm::normalize(direction),glm::radians(innerOpeningAngle),glm::radians(outerOpeningAngle),attenuation)
 {
 }

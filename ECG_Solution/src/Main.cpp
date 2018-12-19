@@ -14,6 +14,8 @@
 #include "Camera.h"
 #include "Geometry.h"
 #include "LightManager.h"
+#include "LambertMaterial.h"
+#include "PBRMaterial.h"
 
 
 
@@ -31,7 +33,7 @@ static void perFrameUniforms(std::vector<std::shared_ptr<Shader>>& shaders, Came
 /* --------------------------------------------- */
 // Global variables
 /* --------------------------------------------- */
-float _zoom = 6;
+float _zoom = 25;
 bool _dragging = false;
 bool _strafing = false;
 bool _wireframe = false;
@@ -135,10 +137,16 @@ int main(int argc, char** argv)
 		shaders.emplace_back(gouraudShader);
 		std::shared_ptr<Shader> phongShader = std::make_shared<Shader>("Phong.vert", "Phong.frag");
 		shaders.emplace_back(phongShader);
-
+		std::shared_ptr<Shader> gouraudPBR = std::make_shared<Shader>("PBR_shader_gouraud.vert", "PBR_shader_gouraud.frag");
+		shaders.emplace_back(gouraudPBR);		
+		std::shared_ptr<Shader> phongPBR = std::make_shared<Shader>("PBR_shader_phong.vert", "PBR_shader_phong.frag");
+		shaders.emplace_back(phongPBR);
 		//Materials
-		std::shared_ptr<Material> gouraudSphere = std::make_shared<Material>(gouraudShader, glm::vec3(0.1f), glm::vec3(0.9f), glm::vec3(0.3f), 10.0f);
-		std::shared_ptr<Material> phongSphere = std::make_shared<Material>(phongShader, glm::vec3(0.1f), glm::vec3(0.9f), glm::vec3(0.3f), 10.0f);
+		std::shared_ptr<Material> gouraudSphere = std::make_shared<LambertMaterial>(gouraudShader, glm::vec3(0.1f), glm::vec3(0.9f), glm::vec3(0.3f), 10.0f);
+		std::shared_ptr<Material> phongSphere = std::make_shared<LambertMaterial>(phongShader, glm::vec3(0.1f), glm::vec3(0.9f), glm::vec3(0.3f), 10.0f);
+		std::shared_ptr<Material> lowerRow = std::make_shared<LambertMaterial>(phongShader, glm::vec3(0.05f), glm::vec3(0.8f), glm::vec3(0.5f), 5.0f);
+		std::shared_ptr<Material> randomPBR = std::make_shared<PBRMaterial>(phongPBR, glm::vec3(0.8,0.75,0.8));
+		std::shared_ptr<Material> randomPBRGouraud = std::make_shared<PBRMaterial>(gouraudPBR, glm::vec3(1.00,0.0,0.0));
 		//Geometries
 		glm::mat4 topLeftModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-1.2f, 1.0f, 0.0f));
 		Geometry topLeftSphere(topLeftModelMatrix, Geometry::createSphereGeometry(1.0, 32, 16), gouraudSphere);
@@ -146,21 +154,58 @@ int main(int argc, char** argv)
 		glm::mat4 topRightModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(1.2f, 1.0f, 0.0f));
 		Geometry topRightSphere(topRightModelMatrix, Geometry::createSphereGeometry(1.0, 32, 16), phongSphere);
 		topRightSphere.setColor(glm::vec3(1.0f, 0.0f, 0.0f));
+		glm::mat4 bottomLeftModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-1.2f, -1.5f, 0.0f));
+		Geometry bottomLeftCube(bottomLeftModelMatrix, Geometry::createCubeGeometry(1.5f, 1.5f, 1.5), lowerRow);
+		bottomLeftCube.setColor(glm::vec3(1.0f, 0.0f, 0.0f));
+		glm::mat4 bottomRightModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(1.2f, -1.5f, 0.0f));
+		Geometry bottomRightCylinder(bottomRightModelMatrix, Geometry::createCylinderGeometry(1.0f,1.5f,16), lowerRow);
+		bottomRightCylinder.setColor(glm::vec3(1.0f, 0.0f, 0.0f));
 
 		//Lights
 		LightManager lightManager;
 		lightManager.createPointLight(glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.0f), glm::vec3(0.1f, 0.4f, 1.0f));
-		//lightManager.createPointLight(glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.5f,0.5f,0.5f), glm::vec3(0.1f, 0.4f, 1.0f));
-		//lightManager.createPointLight(glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.5f,0.5f,0.5f), glm::vec3(0.1f, 0.4f, 1.0f));
 		lightManager.createDirectionalLight(glm::vec3(0.8f), glm::vec3(0.0f, -1.0f, -1.0f));
-		//lightManager.createDirectionalLight(glm::vec3(0.8f,0.8f,0.8f), glm::vec3(0.0f, 0.0f, 1.0f));
-		//lightManager.createDirectionalLight(0.25f*glm::vec3(0.8f), glm::vec3(0.0f, -5.0f, -1.0f));
+		lightManager.createDirectionalLight(0.2f*glm::vec3(0.8f,0.8f,0.8f), glm::vec3(0.0f, -1.0001f, -1.0f));
+		lightManager.createDirectionalLight(0.2f*glm::vec3(0.8f), glm::vec3(0.0f, -0.9999f, -1.0f));
+
+		glm::vec3 gold = glm::vec3(1.0f, 0.86f, 0.57f);
+		std::vector<std::unique_ptr<Geometry>> PBRSpheres;
+		for (int i = 1; i <= 6; ++i) {
+			for (int j = 0; j < 6; ++j) {
+				std::shared_ptr<Material> PBRMat = std::make_shared<PBRMaterial>(phongPBR, gold, 1.0f / float(i)-0.001f, 1.0f / float(j+1) -0.001f);
+				glm::mat4 modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-2.5f - 2.5*float(i), 7.5f - 2.5f*float(j), 0.0f));
+				PBRSpheres.emplace_back(std::make_unique<Geometry>(modelMatrix, Geometry::createSphereGeometry(1.0, 32, 16), PBRMat));
+				if (i % 2 == 0 && j % 2 == 0) {
+					lightManager.createPointLight(glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(-2.8f - 2.5*float(i), 7.5f - 2.5f*float(j), 1.5f), glm::vec3(0.6f, 0.4f, 1.0f));
+					lightManager.createPointLight(glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(-1.7f - 2.5*float(i), 7.5f - 2.5f*float(j), 1.5f), glm::vec3(0.6f, 0.4f, 1.0f));
+				}
+			}
+		}
+
+		glm::mat4 modelMatrixGouraudPBR = glm::translate(glm::mat4(1.0f), glm::vec3(+5.0f, +3.0f, 0.0f));
+		glm::mat4 modelMatrixSpotLightCube  = glm::translate(glm::mat4(1.0f), glm::vec3(+5.0f, -3.0f, 0.0f));
+
+		Geometry spotLightCube(modelMatrixSpotLightCube, Geometry::createCubeGeometry(1.5f, 1.5f, 1.5), randomPBR);
+		Geometry gouraudPbrSphere(modelMatrixGouraudPBR, Geometry::createSphereGeometry(1.0, 32, 16), randomPBRGouraud);
+
+		lightManager.createSpotLight(glm::vec3(1.0f), glm::vec3(5.0f, -3.0f, 1.5f), glm::vec3(0.0f, 0.0f, -1.0f), 20.f, 40.f, glm::vec3(0.1f, 0.4f, 1.0f));
+		lightManager.createSpotLight(glm::vec3(1.0f,0.0f,0.0f), glm::vec3(6.0f, -3.0f, 1.5f), glm::vec3(-0.5f, 0.0f, -1.0f), 15.f, 35.0f, glm::vec3(0.1f, 0.4f, 1.0f));
+		lightManager.createSpotLight(glm::vec3(0.f,0.f,1.0f), glm::vec3(4.f, -3.0f, 1.5f), glm::vec3(0.2f, 0.0f, -1.0f), 15.0f, 35.0f, glm::vec3(0.1f, 0.4f, 1.0f));
 
 		//Camera
 		Camera camera(fov, float(window_width) / float(window_height), nearZ, farZ);
 		double mouseX, mouseY;
+		double thisFrameTime = 0, oldFrameTime = 0, deltaT = 0;
+		double startTime = glfwGetTime();
+		unsigned long framecounter = 0;
 		while (!glfwWindowShouldClose(window)) {
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+			//timings
+			++framecounter;
+			thisFrameTime = glfwGetTime();
+			deltaT = thisFrameTime - oldFrameTime;
+			oldFrameTime = thisFrameTime;
 
 			//Poll Input Events
 			glfwPollEvents();
@@ -177,11 +222,26 @@ int main(int argc, char** argv)
 			//draw Geometries
 			topLeftSphere.draw();
 			topRightSphere.draw();
+			bottomLeftCube.draw();
+			bottomRightCylinder.draw();
+			spotLightCube.draw();
+			gouraudPbrSphere.draw();
+
+			for (std::unique_ptr<Geometry>& geom : PBRSpheres) {
+				geom->draw();
+			}
 			//Swap Buffers
 			glfwSwapBuffers(window);
 		}
-
+		/* --------------------------------------------- */
+		// Statistics
+		/* --------------------------------------------- */
+		double endTime = glfwGetTime();
+		std::cout << "Program ran for " << endTime - startTime << "seconds." << std::endl;
+		std::cout << "Average fps: " << framecounter / (endTime - startTime) << "." << std::endl;
 	}
+
+
 
 
 	/* --------------------------------------------- */
@@ -194,7 +254,8 @@ int main(int argc, char** argv)
 	/* --------------------------------------------- */
 	// Destroy context and exit
 	/* --------------------------------------------- */
-
+	
+	glfwTerminate();
 
 	return EXIT_SUCCESS;
 }

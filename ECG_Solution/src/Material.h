@@ -3,17 +3,12 @@
 #include "Shader.h"
 class Material
 {
-private:
-	glm::vec3 ambient;
-	glm::vec3 diffuse;
-	glm::vec3 specular;
-	float specularCoefficient; 
+protected:
 	std::shared_ptr<Shader> shader;
 public:
-	Material(std::shared_ptr<Shader> shader,glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular,float specularCoefficient);
 	Material(std::shared_ptr<Shader> shader);
-	~Material();
-	void setUniforms();
-	std::shared_ptr<Shader> getShader();
+	virtual ~Material();
+	virtual void setUniforms();
+	virtual std::shared_ptr<Shader> getShader() final;
 };
 

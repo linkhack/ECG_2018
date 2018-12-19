@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <ClInclude Include="src\LambertMaterial.h" />
+    <ClInclude Include="src\PBRMaterial.h" />
     <ClInclude Include="src\SpotLight.h" />
     <ClInclude Include="src\LightManager.h" />
     <ClInclude Include="src\DirectionalLight.h" />
@@ -13,6 +15,8 @@
     <ClInclude Include="src\PointLight.h" />
     <ClInclude Include="src\Shader.h" />
     <ClInclude Include="src\INIReader.h" />
+    <ClCompile Include="src\LambertMaterial.cpp" />
+    <ClCompile Include="src\PBRMaterial.cpp" />
     <ClCompile Include="src\SpotLight.cpp" />
     <ClCompile Include="src\LightManager.cpp" />
     <ClCompile Include="src\DirectionalLight.cpp" />
