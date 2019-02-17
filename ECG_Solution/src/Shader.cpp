@@ -100,7 +100,9 @@ bool Shader::loadShader(std::string filePath, GLenum shaderType, GLuint & shader
 GLint Shader::getUniformLocation(std::string location)
 {
 	auto search = locations.find(location);
-
+	GLint locationId = glGetUniformLocation(handle, location.c_str());
+	locations.insert(std::make_pair(location, locationId));
+	return locationId;
 	if (search != locations.end()) 
 	{
 		return search->second;

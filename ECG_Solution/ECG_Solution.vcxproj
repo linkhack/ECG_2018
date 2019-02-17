@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <ClCompile Include="src\Texture.cpp" />
+    <ClCompile Include="src\TextureMaterial.cpp" />
     <ClInclude Include="src\LambertMaterial.h" />
     <ClInclude Include="src\PBRMaterial.h" />
     <ClInclude Include="src\SpotLight.h" />
@@ -28,6 +30,8 @@
     <ClCompile Include="src\Shader.cpp" />
     <ClCompile Include="src\Main.cpp" />
     <ClInclude Include="src\Utils.h" />
+    <ClInclude Include="src\Texture.h" />
+    <ClInclude Include="src\TextureMaterial.h" />
   </ItemGroup>
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">

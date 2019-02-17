@@ -1,0 +1,24 @@
+Position: -11.9087,5.39055,-1.31333
+Direction: -0.106957,-0.0566928,0.992646
+
+Position: 11.4277,4.78483,-0.128228
+Direction: -0.972192,-0.224101,0.0679862
+
+Position: 8.51723,-5.93359,13.9128
+Direction: -0.770223,-0.252491,-0.585665
+
+Position: -9.87188/1.0491/9.80016
+Direction: 0.931933/-0.182838/-0.313164
+
+Position: -10.2066,13.1371,1.75273
+Direction: 0.847076,-0.531399,-0.00887181
+
+
+	theScene.getLightManager().addPointLight(LightProperties{ glm::vec3(-9.8f, 9.8f, -1.04f), glm::vec3(1.0f, .9f, .9f) });
+	theScene.getLightManager().addPointLight(glm::vec3(9.0, 9.8f,-1.0f), glm::vec3(1.0f, .9f, .9f));
+	
+
+	theScene.getLightManager().addSpotLight(LightProperties{ glm::vec3{8.51723,13.9128 ,5.93359}, glm::vec3(-0.770223,-0.585665, 0.252491), glm::vec3(1.0f,1.0f, 1.0f),  VolumeProperties{true, 0.01f, 40000} });
+	theScene.getLightManager().addSpotLight(LightProperties{ glm::vec3{-10.2623,13.6994 ,1.86126}, glm::vec3(0.781944,-0.617722,-0.0835647), glm::vec3(1.0f,1.0f, 1.0f), VolumeProperties{true, 0.01f, 30000} });
+	theScene.getLightManager().addSpotLight(LightProperties{ glm::vec3{-13.1688,5.88551,-5.63124}, glm::vec3(0.821271,-0.402747,-0.404115), glm::vec3(1.0f,1.0f, 1.0f), VolumeProperties{true, 0.01f, 40000} });
+

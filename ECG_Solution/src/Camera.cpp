@@ -10,7 +10,7 @@ Camera::Camera(float fov, float aspect, float near, float far)
 	yaw = 0.0f;
 	radius = 20.0f;
 	position = vec3(0.0f, 0.0f, 20.0f);
-	strafe = vec3(-7.0f, 0.0f, 0.0f);
+	strafe = vec3(0.0f, 0.0f, 0.0f);
 	vec3 up = vec3(0.0f, 1.0f, 0.0f);
 	vec3 right = vec3(1.0f, 0.0f, 0.0f);
 	projectionMatrix = perspective(radians(fov), aspect, near, far);

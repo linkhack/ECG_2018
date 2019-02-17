@@ -92,10 +92,7 @@ vec3 diffuse(float LdotH,float LdotN, float VdotN, vec3 linearBaseColor){
 	float FD90 = 0.5f + 2.0f * LdotH*LdotH*materialCoefficients.roughness;   
 	float Fl = SchlickFresnel(LdotN);
 	float Fv = SchlickFresnel(VdotN);
-	//return linearBaseColor/PI * mix(1.0f,FD90,Fl)*mix(1.0f,FD90,Fv)*LdotN;
-	return linearBaseColor/PI*((1.0f-0.5*Fl)*(1.0f-0.5*Fv) * (1+(FD90-1)*Fl)*(1+(FD90-1)*Fv));
-	//return linearBaseColor/PI*(1.0f-0.5f*Fl)*(1.0f-0.5f*Fv);
-	//return linearBaseColor/PI * (1+(FD90-1)*Fl)*(1+(FD90-1)*Fv);
+	return linearBaseColor/PI * mix(1.0f,FD90,Fl)*mix(1.0f,FD90,Fv)*LdotN;
 }
 
 vec3 specular(float NdotH, float LdotH, float NdotV, float NdotL, vec3 specColor, vec3 cSheen){

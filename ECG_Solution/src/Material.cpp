@@ -12,6 +12,11 @@ void Material::setUniforms()
 {
 }
 
+void Material::setUniforms(int textureUnit)
+{
+	setUniforms();
+}
+
 
 std::shared_ptr<Shader> Material::getShader()
 {

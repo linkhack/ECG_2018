@@ -24,6 +24,14 @@ Geometry::Geometry(glm::mat4 modelMatrix, GeometryData& geometryData, std::share
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
+	//create uv array buffer
+	glGenBuffers(1, &vboUV);
+	glBindBuffer(GL_ARRAY_BUFFER, vboUV);
+	glBufferData(GL_ARRAY_BUFFER, geometryData.uv.size() * sizeof(glm::vec2), geometryData.uv.data(), GL_STATIC_DRAW);
+	//Bind vertex uv to location 2
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
 
 	//create Index Array
 	glGenBuffers(1, &vboIndices);
@@ -50,6 +58,7 @@ Geometry::~Geometry()
 		glDeleteBuffers(1, &vboIndices);
 		glDeleteBuffers(1, &vboPositions);
 		glDeleteBuffers(1, &vboNormals);
+		glDeleteBuffers(1, &vboUV);
 		glDeleteVertexArrays(1, &vao);
 		std::cout << "Buffers deleted" << std::endl;
 	}
@@ -67,7 +76,7 @@ void Geometry::draw(glm::mat4 matrix)
 	glm::mat4 totalMatrix = matrix * modelMatrix;
 	std::shared_ptr<Shader> shader = material->getShader();
 	//set Model Uniforms
-	material->setUniforms();
+	material->setUniforms(0);
 	shader->use();
 	shader->setUniform("modelMatrix", totalMatrix);
 	shader->setUniform("normalMatrix", glm::mat3(glm::inverse(glm::transpose(totalMatrix))));
@@ -160,6 +169,46 @@ GeometryData Geometry::createCubeGeometry(float width, float height, float depth
 		glm::vec3(1.0f,0.0f,0.0f)
 	};
 
+	data.uv = {
+		//front
+		glm::vec2(0.0f,1.0f),
+		glm::vec2(0.0f,0.0f),
+		glm::vec2(1.0f,0.0f),
+		glm::vec2(1.0f,1.0f),
+
+		//back
+		glm::vec2(1.0f,1.0f),
+		glm::vec2(1.0f,0.0f),
+		glm::vec2(0.0f,0.0f),
+		glm::vec2(0.0f,1.0f),
+
+		//top
+		glm::vec2(0.0f,1.0f),
+		glm::vec2(1.0f,1.0f),
+		glm::vec2(1.0f,0.0f),
+		glm::vec2(0.0f,0.0f),
+
+		//bottom
+		glm::vec2(1.0f,0.0f),
+		glm::vec2(0.0f,0.0f),
+		glm::vec2(0.0f,1.0f),
+		glm::vec2(1.0f,1.0f),
+
+		//left
+		glm::vec2(0.0f,1.0f),
+		glm::vec2(0.0f,0.0f),
+		glm::vec2(1.0f,0.0f),
+		glm::vec2(1.0f,1.0f),
+
+		//right
+		glm::vec2(1.0f,0.0f),
+		glm::vec2(1.0f,1.0f),
+		glm::vec2(0.0f,1.0f),
+		glm::vec2(0.0f,0.0f)
+	
+
+	};
+
 	data.indices = {
 		//Front
 		0,1,2,
@@ -192,27 +241,33 @@ GeometryData Geometry::createCubeGeometry(float width, float height, float depth
 GeometryData Geometry::createSphereGeometry(float radius, unsigned int longitudeSegments, unsigned int latitudeSegments)
 {
 	GeometryData data;
-	
-	data.positions.push_back(glm::vec3(0, +radius, 0));
-	data.normals.push_back(glm::vec3(0.0f, 1.0f, 0.0f));
-	data.positions.push_back(glm::vec3(0.0f, -radius, 0.0f));
-	data.normals.push_back(glm::vec3(0.0f, -1.0f, 0.0f));
-	//first ring indices
+
+	//top pole
+	for (int i = 0; i < longitudeSegments+1; ++i) 
+	{
+		data.positions.push_back(glm::vec3(0, +radius, 0));
+		data.normals.push_back(glm::vec3(0.0f, 1.0f, 0.0f));
+		data.uv.push_back(glm::vec2(float(i)/(longitudeSegments), 1.0f));
+		data.positions.push_back(glm::vec3(0.0f, -radius, 0.0f));
+		data.normals.push_back(glm::vec3(0.0f, -1.0f, 0.0f));
+		data.uv.push_back(glm::vec2(float(i)/(longitudeSegments), 0.0f));
+		//first ring indices
+	}
 	for (unsigned int i = 0; i < longitudeSegments; ++i)
 	{
-		data.indices.push_back(0);
-		data.indices.push_back(i == longitudeSegments-1? 2 : i+3);
-		data.indices.push_back(i + 2);
+		data.indices.push_back(2*i);
+		data.indices.push_back(2*(longitudeSegments+1)+1+i);
+		data.indices.push_back(2*(longitudeSegments+1)+0+i);
 
-		data.indices.push_back(1);
-		data.indices.push_back((latitudeSegments - 2)*longitudeSegments + 2 + i);
-		data.indices.push_back(i == longitudeSegments - 1 ? (latitudeSegments - 2)*longitudeSegments + 2 : (latitudeSegments - 2)*longitudeSegments + i + 3);
+		data.indices.push_back(2*i+1);
+		data.indices.push_back((latitudeSegments)*((longitudeSegments + 1)) +i);
+		data.indices.push_back((latitudeSegments)*((longitudeSegments + 1)) + i + 1);
 	}
 
 	//construct rings and vertices
 	for (unsigned int latIndex = 1; latIndex < latitudeSegments; ++latIndex) {
 		float verticalAngle = float(latIndex) * glm::pi<float>() / float(latitudeSegments);
-		for (unsigned int longIndex = 0; longIndex < longitudeSegments; ++longIndex) {
+		for (unsigned int longIndex = 0; longIndex < longitudeSegments+1; ++longIndex) {
 			float horizontalAngle = 2*float(longIndex) * glm::pi<float>() / float(longitudeSegments);
 			data.positions.push_back(glm::vec3(
 				radius * glm::sin(verticalAngle) * glm::cos(horizontalAngle),
@@ -225,15 +280,18 @@ GeometryData Geometry::createSphereGeometry(float radius, unsigned int longitude
 				glm::cos(verticalAngle),
 				glm::sin(verticalAngle) * glm::sin(horizontalAngle)
 			));
-			if (latIndex == 1) continue;
-			data.indices.push_back((latIndex - 1)*longitudeSegments + longIndex + 2);
-			data.indices.push_back((latIndex - 2)*longitudeSegments + longIndex + 2);
-			data.indices.push_back(longIndex==longitudeSegments-1? (latIndex - 2)*longitudeSegments + 2 :(latIndex - 2)*longitudeSegments + longIndex + 3);
+			data.uv.push_back(glm::vec2(static_cast<float>(longIndex)/longitudeSegments,static_cast<float>(latitudeSegments-latIndex)/(latitudeSegments)));
+			if (latIndex == 1||longIndex==longitudeSegments) continue;
+			
+			data.indices.push_back((latIndex - 1)*(longitudeSegments+1) + longIndex + 2 * (longitudeSegments + 1));
+			data.indices.push_back((latIndex - 2)*(longitudeSegments + 1) + longIndex + 2 * (longitudeSegments + 1));
+			data.indices.push_back((latIndex - 2)*(longitudeSegments + 1) + longIndex + 1 + 2 * (longitudeSegments + 1));
 
 
-			data.indices.push_back((latIndex - 1)*longitudeSegments + longIndex + 2);
-			data.indices.push_back(longIndex == longitudeSegments - 1 ? (latIndex - 2)*longitudeSegments + 2 : (latIndex - 2)*longitudeSegments + longIndex + 3);
-			data.indices.push_back(longIndex == longitudeSegments - 1 ? (latIndex - 1)*longitudeSegments + 2 : (latIndex - 1)*longitudeSegments + longIndex + 3);
+			data.indices.push_back((latIndex - 1)*(longitudeSegments + 1) + longIndex + 2 * (longitudeSegments + 1));
+			data.indices.push_back((latIndex - 2)*(longitudeSegments+1) + longIndex + 1 + 2 * (longitudeSegments + 1));
+			data.indices.push_back((latIndex - 1)*(longitudeSegments + 1) + longIndex + 1 + 2 * (longitudeSegments + 1));
+			
 		}
 	}
 
@@ -244,45 +302,61 @@ GeometryData Geometry::createCylinderGeometry(float radius, float height, unsign
 {
 	GeometryData data;
 
-	//bottome
+	//bottom
 	data.positions.push_back(glm::vec3(0, -height / 2.0f, 0.0f));
 	data.normals.push_back(glm::vec3(0.0f, -1.0f, 0.0f));
+	data.uv.push_back(glm::vec2(0.5f,0.5f));
 	//top
 	data.positions.push_back(glm::vec3(0, height / 2.0f, 0.0f));
 	data.normals.push_back(glm::vec3(0, 1.0f, 0.0f));
+	data.uv.push_back(glm::vec2(0.5f, 0.5f));
 
 
-	for (unsigned int i = 0; i < segments; i++)
+	for (unsigned int i = 0; i < segments+1; i++)
 	{
 		float angle = 2 * i * glm::pi<float>() / float(segments);
 		//two vertices because of normals (one one normal for bottom/top, and one normal to side face
 		//Vertices are ordered counterclockwise!!
-		data.positions.push_back(glm::vec3(radius*glm::cos(angle), -height / 2.0f, radius*glm::sin(angle))); // 2 + 4i //bottom face
+		glm::vec3 circelPos = radius * glm::vec3(glm::cos(angle), 0, glm::sin(angle));
+		glm::vec3 circlePosTop = circelPos + glm::vec3(0.0f, height / 2.0f, 0.0f);
+		glm::vec3 circlePosBot = circelPos - glm::vec3(0.0f, height/2.0f, 0.0f);
+		glm::vec2 circleInSquareUV = 0.5f / radius * glm::vec2(circelPos.x, circelPos.z) + 0.5f;
+
+		data.positions.push_back(circlePosBot); // 2 + 4i //bottom face
 		data.normals.push_back(glm::vec3(0.0f, -1.0f, 0.0f));
+		data.uv.push_back(circleInSquareUV);
+
 		data.positions.push_back(glm::vec3(radius*glm::cos(angle), -height / 2.0f, radius*glm::sin(angle))); // 3 + 4i //side face bottom
 		data.normals.push_back(glm::vec3(glm::cos(angle), 0.0f, glm::sin(angle)));
+		data.uv.push_back(glm::vec2(static_cast<float>(i)/ (segments), 0.0f));
+
 		data.positions.push_back(glm::vec3(radius*glm::cos(angle), height / 2.0f, radius*glm::sin(angle)));  // 4 + 4i //side face top
 		data.normals.push_back(glm::vec3(glm::cos(angle), 0.0f, glm::sin(angle)));
+		data.uv.push_back(glm::vec2(static_cast<float>(i) / segments, 1.0f));
+
 		data.positions.push_back(glm::vec3(radius*glm::cos(angle), height / 2.0f, radius* glm::sin(angle)));  // 5 + 4i //top face
 		data.normals.push_back(glm::vec3(0.0f, 1.0f, 0.0f));
+		data.uv.push_back(circleInSquareUV);
+		
 		//bottom faces
+		if (i == segments) continue;
 		data.indices.push_back(0);
 		data.indices.push_back(2 + 4 * i);
-		data.indices.push_back(i == segments - 1 ? 2 : 2 + 4 * (i + 1));
+		data.indices.push_back(2 + 4 * (i + 1));
 		
 		//side faces
 		data.indices.push_back(3 + 4 * i);
-		data.indices.push_back(i == segments - 1 ? 4 : 4 + 4 * (i + 1));
-		data.indices.push_back(i == segments - 1 ? 3 : 3 + 4 * (i + 1));
+		data.indices.push_back(4 + 4 * (i + 1));
+		data.indices.push_back(3 + 4 * (i + 1));
 
 
 		data.indices.push_back(3 + 4 * i);
 		data.indices.push_back(4 + 4 * i);
-		data.indices.push_back(i == segments - 1 ? 4 : 4 + 4 * (i + 1));
+		data.indices.push_back(4 + 4 * (i + 1));
 
 		//top face
 		data.indices.push_back(1);
-		data.indices.push_back(i == segments - 1 ? 5 : 5 + 4 * (i + 1));
+		data.indices.push_back(5 + 4 * (i + 1));
 		data.indices.push_back(5 + 4 * i);
 	}
 	return data;

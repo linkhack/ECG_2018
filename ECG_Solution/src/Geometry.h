@@ -16,6 +16,7 @@ struct GeometryData {
 	//Vertex data
 	vector<glm::vec3> positions;
 	vector<glm::vec3> normals;
+	vector<glm::vec2> uv;
 	//Indices
 	vector<unsigned int> indices;
 };
@@ -23,12 +24,13 @@ struct GeometryData {
 class Geometry
 {
 private:
-	bool isEmpty;
+	bool isEmpty = true;
 	//Buffers
 	GLuint vao;
 
 	GLuint vboPositions;
 	GLuint vboNormals;
+	GLuint vboUV;
 	GLuint vboIndices;
 
 	//nrOfVertices
